@@ -1,626 +1,299 @@
-\# 📘 Collaborative Routine Tracker
+# # 📘 Collaborative Routine Tracker
 
- 
-
-A modern, real-time collaborative routine tracking app where users join a group and share their daily routine visually. Built with Next.js, NestJS, PostgreSQL, and a modern UI/UX theme.
-
- 
-
- 
+A modern, real-time collaborative routine tracking app where users join a group and share their daily routine visually. Built with **Next.js**, **NestJS**, **PostgreSQL**, and a modern UI/UX theme.
 
 ---
 
- 
+<br>
 
-<br>## 🚀 Project Structure
+# ## 🚀 Project Structure
 
- 
-
+```
 /
-
-├── collaborative\_routine\_frontend/   # Next.js App Router + Tailwind + Zustand
-
-├── collaborative\_routine\_backend/    # NestJS Backend + TypeORM + Postgres
-
+├── collaborative_routine_frontend/   # Next.js App Router + Tailwind + Zustand
+├── collaborative_routine_backend/    # NestJS Backend + TypeORM + Postgres
 └── README.md                         # This file
-
- 
-
- 
+```
 
 ---
 
- 
+<br>
 
-<br>## ✨ Features
+# ## ✨ Features
 
- 
-
-✔ Single-Group Model
-
- 
+### ✔ Single-Group Model
 
 Every user belongs to exactly one group → simple, focused collaboration.
 
- 
+### ✔ Routine Sharing
 
-✔ Routine Sharing
+Each user creates their own daily routine; all routines appear together in a **Routine Grid** so the group can stay in sync.
 
- 
-
-Each user creates their own daily routine; all routines appear together in a Routine Grid so the group can stay in sync.
-
- 
-
-✔ Invite-Based Joining
-
- 
+### ✔ Invite-Based Joining
 
 Users join a group through invite codes that expire.
 
- 
+### ✔ Authentication
 
-✔ Authentication
+JWT authentication with refresh tokens & secure password hashing.
 
- 
-
-JWT authentication with refresh tokens \& secure password hashing.
-
- 
-
-✔ Modern UI \& Theme System
-
- 
+### ✔ Modern UI & Theme System
 
 A complete token-driven design system for animations, typography, spacing, and colors.
 
- 
-
-✔ Activity Log (optional module)
-
- 
+### ✔ Activity Log (optional module)
 
 Track events like user joined, routine updated, check-ins, etc.
 
- 
+---
 
- 
+<br>
+
+# ## 🛠️ Tech Stack
+
+### **Frontend (collaborative_routine_frontend)**
+
+* **Next.js 14+ (App Router)**
+* **React**
+* **Tailwind CSS**
+* **Framer Motion**
+* **Zustand** for global state (auth/user)
+* **Axios** (or custom client) for API calls
+* **Custom Design Token System**
+
+### **Backend (collaborative_routine_backend)**
+
+* **NestJS**
+* **TypeORM**
+* **PostgreSQL**
+* **@nestjs/config** for environment config
+* **JWT Authentication**
+* **Class-Validator / Class-Transformer**
+* **Modular architecture:** Users, Auth, Groups, Routines, Activity, Health
 
 ---
 
- 
+<br>
 
-<br>## 🛠️ Tech Stack
-
- 
-
-Frontend (collaborative\_routine\_frontend)
-
- 
-
-Next.js 14+ (App Router)
-
- 
-
-React
-
- 
-
-Tailwind CSS
-
- 
-
-Framer Motion
-
- 
-
-Zustand for global state (auth/user)
-
- 
-
-Axios (or custom client) for API calls
-
- 
-
-Custom Design Token System
-
- 
-
- 
-
-Backend (collaborative\_routine\_backend)
-
- 
-
-NestJS
-
- 
-
-TypeORM
-
- 
-
-PostgreSQL
-
- 
-
-@nestjs/config for environment config
-
- 
-
-JWT Authentication
-
- 
-
-Class-Validator / Class-Transformer
-
- 
-
-Modular architecture: Users, Auth, Groups, Routines, Activity, Health
-
- 
-
- 
-
- 
+# ## 🔧 Setup Instructions
 
 ---
 
- 
+# ### 1️⃣ Clone the repository
 
-<br>## 🔧 Setup Instructions
-
- 
-
- 
-
----
-
- 
-
-\### 1️⃣ Clone the repository
-
- 
-
+```bash
 git clone https://github.com/yourusername/collaborative-routine.git
-
 cd collaborative-routine
-
- 
-
- 
+```
 
 ---
 
- 
+# ### 2️⃣ Environment Variables
 
-\### 2️⃣ Environment Variables
-
- 
-
-Create .env files in both folders.
-
- 
-
- 
+Create `.env` files in both folders.
 
 ---
 
- 
+## 🔹 Backend (`/collaborative_routine_backend/.env`)
 
-🔹 Backend (/collaborative\_routine\_backend/.env)
+```
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASS=password
+DB_NAME=collaborative_routine
 
- 
-
-DB\_HOST=localhost
-
-DB\_PORT=5432
-
-DB\_USER=postgres
-
-DB\_PASS=password
-
-DB\_NAME=collaborative\_routine
-
- 
-
-JWT\_SECRET=supersecret
-
-JWT\_EXPIRES\_IN=1d
-
-REFRESH\_SECRET=anothersecret
-
-REFRESH\_EXPIRES\_IN=7d
-
- 
-
- 
+JWT_SECRET=supersecret
+JWT_EXPIRES_IN=1d
+REFRESH_SECRET=anothersecret
+REFRESH_EXPIRES_IN=7d
+```
 
 ---
 
- 
+## 🔹 Frontend (`/collaborative_routine_frontend/.env.local`)
 
-🔹 Frontend (/collaborative\_routine\_frontend/.env.local)
-
- 
-
-NEXT\_PUBLIC\_API\_BASE\_URL=http://localhost:3001/api
-
- 
-
- 
+```
+NEXT_PUBLIC_API_BASE_URL=http://localhost:3001/api
+```
 
 ---
 
- 
+<br>
 
-<br>### 3️⃣ Start Backend (NestJS)
+# ### 3️⃣ Start Backend (NestJS)
 
- 
-
-cd collaborative\_routine\_backend
-
+```bash
+cd collaborative_routine_backend
 npm install
-
 npm run start:dev
+```
 
- 
-
-Backend runs on http://localhost:3001 by default.
-
- 
-
- 
+Backend runs on **[http://localhost:3001](http://localhost:3001)** by default.
 
 ---
 
- 
+<br>
 
-<br>### 4️⃣ Start Frontend (Next.js)
+# ### 4️⃣ Start Frontend (Next.js)
 
- 
-
-cd collaborative\_routine\_frontend
-
+```bash
+cd collaborative_routine_frontend
 npm install
-
 npm run dev
+```
 
- 
-
-Frontend runs on http://localhost:3000.
-
- 
-
- 
+Frontend runs on **[http://localhost:3000](http://localhost:3000)**.
 
 ---
 
- 
+<br>
 
-<br>## 📡 API Overview (Backend)
+# ## 📡 API Overview (Backend)
 
- 
+### **Auth**
 
-Auth
+* `POST /api/auth/register`
+* `POST /api/auth/login`
+* `GET /api/auth/me`
 
- 
+### **Group**
 
-POST /api/auth/register
+* `GET /api/me/group`
+* `POST /api/group`
+* `POST /api/group/join`
+* `POST /api/group/invite`
+* `GET /api/group/members`
 
- 
+### **Routine**
 
-POST /api/auth/login
+* `GET /api/me/routine?date=YYYY-MM-DD`
+* `PUT /api/me/routine`
+* `GET /api/group/routine?date=YYYY-MM-DD`
 
- 
+### **Activity (optional)**
 
-GET /api/auth/me
-
- 
-
- 
-
-Group
-
- 
-
-GET /api/me/group
-
- 
-
-POST /api/group
-
- 
-
-POST /api/group/join
-
- 
-
-POST /api/group/invite
-
- 
-
-GET /api/group/members
-
- 
-
- 
-
-Routine
-
- 
-
-GET /api/me/routine?date=YYYY-MM-DD
-
- 
-
-PUT /api/me/routine
-
- 
-
-GET /api/group/routine?date=YYYY-MM-DD
-
- 
-
- 
-
-Activity (optional)
-
- 
-
-GET /api/group/activity
-
- 
-
- 
-
- 
+* `GET /api/group/activity`
 
 ---
 
- 
+<br>
 
-<br>## 🗂️ Backend Architecture Overview
+# ## 🗂️ Backend Architecture Overview
 
- 
-
+```
 src/
-
 ├── auth/
-
 ├── users/
-
 ├── groups/
-
 ├── routines/
-
 ├── activity/
-
 ├── database/
-
 ├── config/
-
 └── common/
+```
 
- 
+### Key Concepts
 
-Key Concepts
-
- 
-
-ConfigModule wraps @nestjs/config
-
- 
-
-DatabaseModule initializes TypeORM using ConfigService
-
- 
-
-Entities: User, Group, GroupMember, GroupInvite, RoutineBlock, ActivityLog
-
- 
-
-Strict DTO validation
-
- 
-
-Consistent response format
-
- 
-
-Relation-driven design for routines + groups
-
- 
-
- 
-
- 
+* **ConfigModule** wraps `@nestjs/config`
+* **DatabaseModule** initializes TypeORM using ConfigService
+* **Entities**: User, Group, GroupMember, GroupInvite, RoutineBlock, ActivityLog
+* **Strict DTO validation**
+* **Consistent response format**
+* **Relation-driven design for routines + groups**
 
 ---
 
- 
+<br>
 
-<br>## 🎨 Frontend Architecture Overview
+# ## 🎨 Frontend Architecture Overview
 
- 
-
+```
 src/
-
 ├── app/                # Next.js routes
-
-├── components/
-
-├── features/
-
+├── components/         
+├── features/           
 ├── stores/             # Zustand states
-
 ├── lib/                # API client
-
 └── styles/             # Theme system
+```
 
- 
+### Highlights
 
-Highlights
-
- 
-
-Fully responsive modern SaaS UI
-
- 
-
-Token-based styling system
-
- 
-
-Animations using Framer Motion
-
- 
-
-Auth handled with Zustand store
-
- 
-
-RoutineGrid integrated into dashboard
-
- 
-
- 
-
- 
+* Fully responsive modern SaaS UI
+* Token-based styling system
+* Animations using Framer Motion
+* Auth handled with Zustand store
+* RoutineGrid integrated into dashboard
 
 ---
 
- 
+<br>
 
-<br>## 🧪 Development Tips
+# ## 🧪 Development Tips
 
- 
-
-🔥 Hot reload both servers
-
- 
+### 🔥 Hot reload both servers
 
 Start backend in one terminal:
 
- 
-
+```bash
 npm run start:dev
-
- 
+```
 
 Start frontend in another:
 
- 
-
+```bash
 npm run dev
+```
 
- 
-
-🛠 Migrations
-
- 
+### 🛠 Migrations
 
 If using TypeORM migrations:
 
- 
-
+```
 npm run migration:generate
-
 npm run migration:run
+```
 
- 
+### 🐘 Postgres Docker Example
 
-🐘 Postgres Docker Example
-
- 
-
-docker run --name routine-db -e POSTGRES\_PASSWORD=password -p 5432:5432 -d postgres
-
- 
-
- 
+```
+docker run --name routine-db -e POSTGRES_PASSWORD=password -p 5432:5432 -d postgres
+```
 
 ---
 
- 
+<br>
 
-<br>## 📌 Roadmap
+# ## 📌 Roadmap
 
- 
+### MVP
 
-MVP
+* [x] Auth (register/login)
+* [x] Group creation + joining
+* [x] Routine creation
+* [x] Shared group routine board
+* [x] Complete theme system
 
- 
+### Next Features
 
-\[x] Auth (register/login)
-
- 
-
-\[x] Group creation + joining
-
- 
-
-\[x] Routine creation
-
- 
-
-\[x] Shared group routine board
-
- 
-
-\[x] Complete theme system
-
- 
-
- 
-
-Next Features
-
- 
-
-\[ ] Routine check-ins
-
- 
-
-\[ ] Streaks \& progress analytics
-
- 
-
-\[ ] Activity log UI
-
- 
-
-\[ ] Push/email notifications
-
- 
-
-\[ ] Multiple routine templates
-
- 
-
-\[ ] Mobile app (React Native)
-
- 
-
- 
-
- 
+* [ ] Routine check-ins
+* [ ] Streaks & progress analytics
+* [ ] Activity log UI
+* [ ] Push/email notifications
+* [ ] Multiple routine templates
+* [ ] Mobile app (React Native)
 
 ---
 
- 
+<br>
 
-<br>## 🤝 Contributing
-
- 
+# ## 🤝 Contributing
 
 PRs and feature ideas are welcome.
-
 Create a new branch:
 
- 
-
+```bash
 git checkout -b feature/my-feature
-
- 
+```
 
