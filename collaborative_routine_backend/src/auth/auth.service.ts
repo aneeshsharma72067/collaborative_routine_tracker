@@ -6,7 +6,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { QueryFailedError, Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 
@@ -28,7 +28,7 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto) {
-    const { email, password } = registerDto;
+    const { email, password, name, timezone } = registerDto;
 
     try {
       const existingUser = await this.userRepository.findOne({
@@ -44,6 +44,8 @@ export class AuthService {
       const user = this.userRepository.create({
         email,
         passwordHash: hashedPassword,
+        name,
+        timezone,
       });
 
       await this.userRepository.save(user);
@@ -54,8 +56,8 @@ export class AuthService {
         createdAt: user.createdAt,
       };
     } catch (error: any) {
-      // rethrow known exceptions so controllers can handle them
       if (
+        error instanceof QueryFailedError ||
         error instanceof ConflictException ||
         error instanceof BadRequestException ||
         error instanceof UnauthorizedException
@@ -67,8 +69,8 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
+    // avoid logging sensitive fields
     const { email, password } = loginDto;
-
     try {
       const user = await this.validateUser(email, password);
 
@@ -98,8 +100,8 @@ export class AuthService {
     try {
       const user = await this.userRepository.findOne({
         where: { email },
+        select: { id: true, email: true, passwordHash: true },
       });
-
       if (!user) {
         throw new UnauthorizedException('Invalid credentials');
       }
@@ -112,6 +114,8 @@ export class AuthService {
 
       return user;
     } catch (error: any) {
+      console.error(error);
+
       if (error instanceof UnauthorizedException) {
         throw error;
       }
@@ -124,7 +128,7 @@ export class AuthService {
       const saltRounds = 10;
       const hashed = await bcrypt.hash(password, saltRounds);
       return hashed;
-    } catch (error) {
+    } catch {
       throw new InternalServerErrorException('Failed to hash password');
     }
   }

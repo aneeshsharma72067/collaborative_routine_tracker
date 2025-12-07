@@ -13,7 +13,7 @@ import { ConfigService } from '@nestjs/config';
         // configuration.ts exposes `database.url` (from env DATABASE_URL)
         url: config.get<string>('database.url'),
         autoLoadEntities: true,
-        synchronize: false,
+        synchronize: true,
       }),
     }),
   ],

@@ -13,7 +13,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Register a new user' })
   @ApiResponse({ status: 201, description: 'User registered successfully' })
   register(@Body() dto: RegisterDto) {
-    return this.auth.register({ email: dto.email, password: dto.password });
+    return this.auth.register(dto);
   }
 
   @Post('login')
