@@ -2,6 +2,8 @@ import {
   Injectable,
   BadRequestException,
   UnauthorizedException,
+  ConflictException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -28,72 +30,102 @@ export class AuthService {
   async register(registerDto: RegisterDto) {
     const { email, password } = registerDto;
 
-    const existingUser = await this.userRepository.findOne({
-      where: { email },
-    });
+    try {
+      const existingUser = await this.userRepository.findOne({
+        where: { email },
+      });
 
-    if (existingUser) {
-      throw new BadRequestException('Email already in use');
+      if (existingUser) {
+        throw new ConflictException('Email already in use');
+      }
+
+      const hashedPassword = await this.hashPassword(password);
+
+      const user = this.userRepository.create({
+        email,
+        passwordHash: hashedPassword,
+      });
+
+      await this.userRepository.save(user);
+
+      return {
+        id: user.id,
+        email: user.email,
+        createdAt: user.createdAt,
+      };
+    } catch (error: any) {
+      // rethrow known exceptions so controllers can handle them
+      if (
+        error instanceof ConflictException ||
+        error instanceof BadRequestException ||
+        error instanceof UnauthorizedException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Unable to register user');
     }
-
-    const hashedPassword = await this.hashPassword(password);
-
-    const user = this.userRepository.create({
-      email,
-      passwordHash: hashedPassword,
-    });
-
-    await this.userRepository.save(user);
-
-    return {
-      id: user.id,
-      email: user.email,
-      createdAt: user.createdAt,
-    };
   }
 
   async login(loginDto: LoginDto) {
     const { email, password } = loginDto;
 
-    const user = await this.validateUser(email, password);
+    try {
+      const user = await this.validateUser(email, password);
 
-    const payload: JwtPayload = {
-      sub: user.id,
-      email: user.email,
-    };
-
-    const accessToken = await this.jwtService.signAsync(payload);
-
-    return {
-      accessToken,
-      user: {
-        id: user.id,
+      const payload: JwtPayload = {
+        sub: user.id,
         email: user.email,
-      },
-    };
+      };
+
+      const accessToken = await this.jwtService.signAsync(payload);
+
+      return {
+        accessToken,
+        user: {
+          id: user.id,
+          email: user.email,
+        },
+      };
+    } catch (error: any) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Login failed');
+    }
   }
 
   async validateUser(email: string, password: string): Promise<User> {
-    const user = await this.userRepository.findOne({
-      where: { email },
-    });
+    try {
+      const user = await this.userRepository.findOne({
+        where: { email },
+      });
 
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+      if (!user) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+
+      if (!isPasswordValid) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      return user;
+    } catch (error: any) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to validate user');
     }
-
-    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
-
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    return user;
   }
 
   private async hashPassword(password: string): Promise<string> {
-    const saltRounds = 10;
-    const hashed = await bcrypt.hash(password, saltRounds);
-    return hashed;
+    try {
+      const saltRounds = 10;
+      const hashed = await bcrypt.hash(password, saltRounds);
+      return hashed;
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to hash password');
+    }
   }
 }
