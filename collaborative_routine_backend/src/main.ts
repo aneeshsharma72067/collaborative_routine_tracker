@@ -13,6 +13,9 @@ async function bootstrap() {
       'API documentation for authentication and collaboration features',
     )
     .setVersion('1.0')
+    .addTag('auth', 'Authentication endpoints')
+    .addTag('groups', 'Group management endpoints')
+    .addTag('routines', 'Routine templates and group routines')
     .addBearerAuth()
     .build();
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
