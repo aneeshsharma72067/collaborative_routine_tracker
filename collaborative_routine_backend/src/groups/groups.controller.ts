@@ -7,6 +7,7 @@ import {
   Get,
   Delete,
   UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -68,33 +69,41 @@ export class GroupsController {
     return this.groupsService.getMembers(user?.sub);
   }
 
-  // Existing CRUD endpoints (now under /api/group/...)
+  // Existing CRUD endpoints (exposed under /api/groups/...)
 
-  @Get('group')
+  @Get('groups')
   @ApiOperation({ summary: 'List all groups' })
   @ApiResponse({ status: 200, description: 'List of groups' })
   findAll() {
     return this.groupsService.findAll();
   }
 
-  @Get('group/:id')
+  @Get('groups/:id')
   @ApiOperation({ summary: 'Get group by id' })
   @ApiResponse({ status: 200, description: 'Group details' })
-  findOne(@Param('id') id: string) {
+  findOne(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+  ) {
     return this.groupsService.findOne(id);
   }
 
-  @Patch('group/:id')
+  @Patch('groups/:id')
   @ApiOperation({ summary: 'Update a group (owner only)' })
   @ApiResponse({ status: 200, description: 'Group updated' })
-  update(@Param('id') id: string, @Body() dto: UpdateGroupDto) {
+  update(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Body() dto: UpdateGroupDto,
+  ) {
     return this.groupsService.update(id, dto);
   }
 
-  @Delete('group/:id')
+  @Delete('groups/:id')
   @ApiOperation({ summary: 'Delete a group (owner only)' })
   @ApiResponse({ status: 200, description: 'Group deleted' })
-  remove(@Param('id') id: string, @CurrentUser() user: any) {
+  remove(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @CurrentUser() user: any,
+  ) {
     return this.groupsService.remove(id, user?.sub);
   }
 }
