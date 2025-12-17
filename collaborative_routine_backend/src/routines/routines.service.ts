@@ -91,48 +91,59 @@ export class RoutinesService {
   }
 
   async getGroupRoutine(userId: string) {
-    if (!userId) {
-      throw new BadRequestException('User id is required');
-    }
+    if (!userId) throw new BadRequestException('User id is required');
 
     const membership = await this.members.findOne({ where: { userId } });
-    if (!membership) {
-      return { routines: [] };
+    if (!membership) return { routines: [] };
+
+    const rows = await this.members
+      .createQueryBuilder('member')
+      .innerJoin(User, 'user', 'user.id = member.userId')
+      .leftJoin(
+        RoutineBlock,
+        'block',
+        'block.userId = member.userId AND block.groupId = member.groupId AND block.date = :date',
+        { date: this.templateDate },
+      )
+      .where('member.groupId = :groupId', { groupId: membership.groupId })
+      .select([
+        'member.userId AS "userId"',
+        'user.name AS "userName"',
+        'block.id AS "blockId"',
+        'block.startTime AS "startTime"',
+        'block.endTime AS "endTime"',
+        'block.title AS "title"',
+        'block.visibility AS "visibility"',
+        'block.color AS "color"',
+      ])
+      .orderBy('"userId"', 'ASC')
+      .addOrderBy('"startTime"', 'ASC')
+      .getRawMany();
+
+    const routinesMap = new Map<
+      string,
+      { userId: string; name: string | null; blocks: RoutineBlockResponseDto[] }
+    >();
+
+    for (const row of rows) {
+      let entry = routinesMap.get(row.userId);
+      if (!entry) {
+        entry = { userId: row.userId, name: row.userName ?? null, blocks: [] };
+        routinesMap.set(row.userId, entry);
+      }
+
+      if (row.blockId) {
+        entry.blocks.push({
+          id: row.blockId,
+          startTime: row.startTime,
+          endTime: row.endTime,
+          title: row.title,
+          visibility: row.visibility,
+          color: row.color ?? undefined,
+        });
+      }
     }
 
-    const members = await this.members.find({
-      where: { groupId: membership.groupId },
-    });
-    if (!members.length) {
-      return { routines: [] };
-    }
-
-    const userIds = members.map((m) => m.userId);
-    const users = await this.users.findBy({ id: In(userIds) });
-    const userMap = new Map(users.map((u) => [u.id, u]));
-
-    const blocks = await this.blocks.find({
-      where: {
-        userId: In(userIds),
-        groupId: membership.groupId,
-        date: this.templateDate,
-      },
-      order: { startTime: 'ASC' },
-    });
-
-    const blocksByUser = new Map<string, RoutineBlockResponseDto[]>();
-    for (const block of blocks) {
-      const list = blocksByUser.get(block.userId) ?? [];
-      list.push(this.mapBlock(block));
-      blocksByUser.set(block.userId, list);
-    }
-
-    return {
-      routines: members.map((member) => ({
-        userId: member.userId,
-        name: userMap.get(member.userId)?.name ?? null,
-        blocks: blocksByUser.get(member.userId) ?? [],
-      })),
-    };
+    return { routines: Array.from(routinesMap.values()) };
   }
 }
