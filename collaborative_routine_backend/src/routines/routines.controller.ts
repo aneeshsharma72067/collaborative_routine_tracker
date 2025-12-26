@@ -11,14 +11,14 @@ import { RoutinesService } from './routines.service';
 import { UpdateMyRoutineDto } from './dto/update-my-routine.dto';
 
 @ApiTags('routines')
-@Controller('api')
+@Controller('routine')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class RoutinesController {
 	constructor(private readonly routinesService: RoutinesService) {}
 
 	// 6. GET /api/me/routine
-	@Get('me/routine')
+	@Get('me')
 	@ApiOperation({ summary: "Get the current user's routine template" })
 	@ApiResponse({ status: 200, description: 'Routine template' })
 	getMyRoutine(@CurrentUser() user: any) {
@@ -26,7 +26,7 @@ export class RoutinesController {
 	}
 
 	// 7. PUT /api/me/routine
-	@Put('me/routine')
+	@Put('me')
 	@ApiOperation({ summary: "Overwrite the current user's routine template" })
 	@ApiResponse({ status: 200, description: 'Updated routine template' })
 	updateMyRoutine(
@@ -37,7 +37,7 @@ export class RoutinesController {
 	}
 
 	// 8. GET /api/group/routine
-	@Get('group/routine')
+	@Get('group')
 	@ApiOperation({ summary: 'Get routines for all members in the current group' })
 	@ApiResponse({ status: 200, description: 'Group routines' })
 	getGroupRoutine(@CurrentUser() user: any) {
