@@ -8,7 +8,7 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors({
-    origin: ['http://localhost:5173','http://localhost:3001'],
+    origin: ['http://localhost:5173','http://localhost:3001','http://localhost:3000'],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   })
@@ -29,7 +29,7 @@ async function bootstrap() {
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, documentFactory);
   app.setGlobalPrefix('api');
-  const port = process.env.PORT ?? 3000;
+  const port = process.env.PORT ?? 5000;
   await app.listen(port);
 
   Logger.log(

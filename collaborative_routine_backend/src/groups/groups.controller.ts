@@ -23,14 +23,14 @@ import { UpdateGroupDto } from './dto/update-group.dto';
 import { JoinGroupDto } from './dto/join-group.dto';
 
 @ApiTags('groups')
-@Controller('api')
+@Controller('group')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class GroupsController {
   constructor(private readonly groupsService: GroupsService) {}
 
   // 1. POST /api/group
-  @Post('group')
+  @Post()
   @ApiOperation({ summary: 'Create a new group and add current user as owner' })
   @ApiResponse({ status: 201, description: 'Group created' })
   createGroup(@Body() dto: CreateGroupDto, @CurrentUser() user: any) {
@@ -38,7 +38,7 @@ export class GroupsController {
   }
 
   // 2. GET /api/me/group
-  @Get('me/group')
+  @Get('me')
   @ApiOperation({ summary: 'Get the current user\'s group' })
   @ApiResponse({ status: 200, description: 'Current user group or null' })
   getMyGroup(@CurrentUser() user: any) {
@@ -46,7 +46,7 @@ export class GroupsController {
   }
 
   // 3. POST /api/group/invite
-  @Post('group/invite')
+  @Post('invite')
   @ApiOperation({ summary: 'Generate an invite code for the current user\'s group' })
   @ApiResponse({ status: 201, description: 'Invite created' })
   createInvite(@CurrentUser() user: any) {
@@ -54,7 +54,7 @@ export class GroupsController {
   }
 
   // 4. POST /api/group/join
-  @Post('group/join')
+  @Post('join')
   @ApiOperation({ summary: 'Join a group using an invite code' })
   @ApiResponse({ status: 201, description: 'User joined group' })
   joinGroup(@Body() dto: JoinGroupDto, @CurrentUser() user: any) {
@@ -62,7 +62,7 @@ export class GroupsController {
   }
 
   // 5. GET /api/group/members
-  @Get('group/members')
+  @Get('members')
   @ApiOperation({ summary: 'List all members in the current user\'s group' })
   @ApiResponse({ status: 200, description: 'Group members' })
   getMembers(@CurrentUser() user: any) {
@@ -71,14 +71,14 @@ export class GroupsController {
 
   // Existing CRUD endpoints (exposed under /api/groups/...)
 
-  @Get('groups')
+  @Get()
   @ApiOperation({ summary: 'List all groups' })
   @ApiResponse({ status: 200, description: 'List of groups' })
   findAll() {
     return this.groupsService.findAll();
   }
 
-  @Get('groups/:id')
+  @Get(':id')
   @ApiOperation({ summary: 'Get group by id' })
   @ApiResponse({ status: 200, description: 'Group details' })
   findOne(
@@ -87,7 +87,7 @@ export class GroupsController {
     return this.groupsService.findOne(id);
   }
 
-  @Patch('groups/:id')
+  @Patch(':id')
   @ApiOperation({ summary: 'Update a group (owner only)' })
   @ApiResponse({ status: 200, description: 'Group updated' })
   update(
@@ -97,7 +97,7 @@ export class GroupsController {
     return this.groupsService.update(id, dto);
   }
 
-  @Delete('groups/:id')
+  @Delete(':id')
   @ApiOperation({ summary: 'Delete a group (owner only)' })
   @ApiResponse({ status: 200, description: 'Group deleted' })
   remove(
