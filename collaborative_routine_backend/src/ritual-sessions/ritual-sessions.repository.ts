@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, LessThanOrEqual, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { RitualSession } from './entities/ritual-session.entity';
 import { RitualSessionStatus } from '../common/enums/session-status.enum';
 
@@ -26,39 +26,24 @@ export class RitualSessionsRepository {
   listForRitual(ritualId: string) {
     return this.repository.find({
       where: { ritualId },
-      order: { scheduledFor: 'DESC' },
+      order: { startedAt: 'DESC', createdAt: 'DESC' },
     });
   }
 
-  findByRitualAndDate(ritualId: string, scheduledFor: string) {
+  findOpenByRitual(ritualId: string) {
     return this.repository.findOne({
-      where: { ritualId, scheduledFor },
+      where: { ritualId, status: RitualSessionStatus.OPEN },
+      order: { startedAt: 'DESC' },
     });
   }
 
-  findLatestForRitual(ritualId: string) {
+  findByTeamAndId(teamId: string, sessionId: string) {
     return this.repository.findOne({
-      where: { ritualId },
-      order: { scheduledFor: 'DESC' },
+      where: { id: sessionId, teamId },
     });
   }
 
-  findOpenSessionsBefore(dateISO: string) {
-    return this.repository.find({
-      where: {
-        scheduledFor: LessThanOrEqual(dateISO),
-        status: RitualSessionStatus.OPEN,
-      },
-    });
-  }
-
-  findUpcomingBetween(ritualId: string, startISO: string, endISO: string) {
-    return this.repository.find({
-      where: {
-        ritualId,
-        scheduledFor: Between(startISO, endISO),
-      },
-      order: { scheduledFor: 'ASC' },
-    });
+  incrementResponseCount(sessionId: string) {
+    return this.repository.increment({ id: sessionId }, 'responseCount', 1);
   }
 }

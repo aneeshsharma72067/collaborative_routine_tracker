@@ -56,8 +56,9 @@ export class RitualResponsesService {
       userId,
       content: dto.content,
     });
-
-    return this.ritualResponsesRepository.save(response);
+    const saved = await this.ritualResponsesRepository.save(response);
+    await this.ritualSessionsService.incrementResponseCount(sessionId);
+    return saved;
   }
 
   async listResponses(

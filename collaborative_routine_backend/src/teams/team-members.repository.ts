@@ -38,4 +38,8 @@ export class TeamMembersRepository {
       },
     });
   }
+
+  countByTeam(teamId: string) {
+    return this.repository.count({ where: { teamId } });
+  }
 }

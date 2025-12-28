@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RitualSession } from './entities/ritual-session.entity';
 import { RitualSessionsController } from './ritual-sessions.controller';
+import { SessionLifecycleController } from './session-lifecycle.controller';
 import { RitualSessionsService } from './ritual-sessions.service';
 import { RitualSessionsRepository } from './ritual-sessions.repository';
 import { RitualsModule } from '../rituals/rituals.module';
@@ -15,7 +16,7 @@ import { WorkspacesModule } from '../workspaces/workspaces.module';
     TeamsModule,
     WorkspacesModule,
   ],
-  controllers: [RitualSessionsController],
+  controllers: [RitualSessionsController, SessionLifecycleController],
   providers: [RitualSessionsService, RitualSessionsRepository],
   exports: [RitualSessionsService, RitualSessionsRepository],
 })

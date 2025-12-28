@@ -11,6 +11,8 @@
 - Delivered the sentiment tracking module with score submission, averages, and a weekly cleanup job.
 - Added the workspace dashboard module to expose aggregated ritual, session, and sentiment metrics.
 - Added utility scripts (`scripts/reset-database.ts`, `scripts/inspect-tables.ts`) to reset and inspect the Postgres schema during the refactor.
+- Introduced lead-only lifecycle endpoints to manually start and close ritual sessions with DTO validation.
+- Expanded the session entity with workspace/team scope, lifecycle timestamps, and response counters for analytics parity with the frontend.
 
 ### Changed
 - Updated the `users` entity to match the new authentication schema (password hashing column and audit timestamps).
@@ -19,6 +21,8 @@
 - Documented assumption that weekly sentiment resets clear future-dated snapshots to reopen submission windows.
 - Rewired the Nest application module to load the redesigned domain modules and the global scheduler.
 - Updated API documentation metadata to reflect the new domain and controller tags.
+- Replaced cron-driven session automation with guarded manual flows that enforce one open session per ritual and expected-response tracking.
+- Session responses now increment persisted counters so dashboards and progress indicators stay in sync with user submissions.
 
 ### Removed
 - Deleted legacy modules tied to groups, routines, and activity tracking ahead of the new domain model implementation.

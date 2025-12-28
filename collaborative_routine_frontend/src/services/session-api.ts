@@ -15,6 +15,18 @@ export async function listSessions(
   return data.data;
 }
 
+export async function startSession(
+  workspaceId: string,
+  teamId: string,
+  ritualId: string,
+): Promise<RitualSessionSummary> {
+  const { data } = await apiClient.post<ApiResponse<RitualSessionSummary>>(
+    `/workspaces/${workspaceId}/teams/${teamId}/rituals/${ritualId}/sessions/start`,
+    {},
+  );
+  return data.data;
+}
+
 export async function getSession(
   workspaceId: string,
   teamId: string,
@@ -49,6 +61,18 @@ export async function listSessionResponses(
 ): Promise<RitualResponse[]> {
   const { data } = await apiClient.get<ApiResponse<RitualResponse[]>>(
     `/workspaces/${workspaceId}/teams/${teamId}/rituals/${ritualId}/sessions/${sessionId}/responses`,
+  );
+  return data.data;
+}
+
+export async function closeSession(
+  workspaceId: string,
+  teamId: string,
+  sessionId: string,
+): Promise<RitualSessionSummary> {
+  const { data } = await apiClient.patch<ApiResponse<RitualSessionSummary>>(
+    `/workspaces/${workspaceId}/teams/${teamId}/sessions/${sessionId}/close`,
+    {},
   );
   return data.data;
 }

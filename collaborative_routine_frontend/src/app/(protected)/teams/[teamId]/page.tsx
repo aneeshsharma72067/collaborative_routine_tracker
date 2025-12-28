@@ -9,6 +9,7 @@ import { useTeamStore } from '@/stores/team-store';
 import { useRitualStore } from '@/stores/ritual-store';
 import { useSessionStore } from '@/stores/session-store';
 import type { RitualType, RitualFrequency, RitualStatus } from '@/types/ritual';
+import type { RitualSessionSummary } from '@/types/session';
 import type { TeamRole } from '@/types/team';
 import { useWorkspaceMembersStore } from '@/stores/workspace-members-store';
 import { useAuth } from '@/hooks/useAuth';
@@ -58,6 +59,9 @@ export default function TeamDetailPage() {
 
   const members = membersByTeamId[teamId] ?? [];
   const rituals = ritualsByTeamId[teamId] ?? [];
+
+  const sessionTimestamp = (session: RitualSessionSummary) =>
+    session.startedAt ?? session.scheduledFor ?? session.createdAt;
 
   const [selectedMemberId, setSelectedMemberId] = useState('');
   const [selectedRole, setSelectedRole] = useState<TeamRole>('MEMBER');
@@ -124,7 +128,7 @@ export default function TeamDetailPage() {
   const upcomingSessions = rituals
     .flatMap((ritual) => sessionsByRitualId[ritual.id] ?? [])
     .filter((session) => session.status === 'OPEN')
-    .sort((a, b) => a.scheduledFor.localeCompare(b.scheduledFor))
+    .sort((a, b) => sessionTimestamp(a).localeCompare(sessionTimestamp(b)))
     .slice(0, 5);
 
   const membershipByUserId = useMemo(() => {
@@ -461,12 +465,16 @@ export default function TeamDetailPage() {
                 const ritualSessions = sessionsByRitualId[ritual.id] ?? [];
                 const upcomingSession = [...ritualSessions]
                   .filter((session) => session.status === 'OPEN')
-                  .sort((a, b) => a.scheduledFor.localeCompare(b.scheduledFor))[0];
+                  .sort((a, b) =>
+                    sessionTimestamp(a).localeCompare(sessionTimestamp(b)),
+                  )[0];
                 const completedSessions = ritualSessions.filter(
                   (session) => session.status === 'CLOSED',
                 );
                 const lastCompleted = [...completedSessions]
-                  .sort((a, b) => b.scheduledFor.localeCompare(a.scheduledFor))[0];
+                  .sort((a, b) =>
+                    sessionTimestamp(b).localeCompare(sessionTimestamp(a)),
+                  )[0];
                 const isPaused = ritual.status === 'PAUSED';
                 const isUpdating = !!ritualUpdateState[ritual.id];
 
@@ -515,8 +523,8 @@ export default function TeamDetailPage() {
                       <p className='text-[10px] uppercase tracking-[0.25em] text-slate-500'>Next session</p>
                       <p className='mt-1 text-sm text-white'>
                         {upcomingSession ? (
-                          <time dateTime={upcomingSession.scheduledFor}>
-                            {new Date(upcomingSession.scheduledFor).toLocaleString()}
+                          <time dateTime={sessionTimestamp(upcomingSession)}>
+                            {new Date(sessionTimestamp(upcomingSession)).toLocaleString()}
                           </time>
                         ) : (
                           'Not scheduled'
@@ -527,8 +535,8 @@ export default function TeamDetailPage() {
                       <p className='text-[10px] uppercase tracking-[0.25em] text-slate-500'>Last completed</p>
                       <p className='mt-1 text-sm text-white'>
                         {lastCompleted ? (
-                          <time dateTime={lastCompleted.scheduledFor}>
-                            {new Date(lastCompleted.scheduledFor).toLocaleString()}
+                          <time dateTime={sessionTimestamp(lastCompleted)}>
+                            {new Date(sessionTimestamp(lastCompleted)).toLocaleString()}
                           </time>
                         ) : (
                           'No sessions yet'
@@ -586,8 +594,8 @@ export default function TeamDetailPage() {
                 <div>
                   <p className='text-sm font-medium text-slate-200'>
                     Session on{' '}
-                    <time dateTime={session.scheduledFor}>
-                      {new Date(session.scheduledFor).toLocaleDateString()}
+                    <time dateTime={sessionTimestamp(session)}>
+                      {new Date(sessionTimestamp(session)).toLocaleDateString()}
                     </time>
                   </p>
                   <p className='text-xs text-slate-400'>Status: {session.status}</p>
