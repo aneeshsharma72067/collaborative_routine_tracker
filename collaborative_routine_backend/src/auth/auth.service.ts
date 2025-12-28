@@ -5,14 +5,13 @@ import {
   ConflictException,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { QueryFailedError, Repository } from 'typeorm';
+import { QueryFailedError } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { User } from 'src/users/entities/user.entity';
+import { UsersRepository } from '../users/users.repository';
 
 interface JwtPayload {
   sub: string;
@@ -22,18 +21,15 @@ interface JwtPayload {
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
+    private readonly usersRepository: UsersRepository,
     private readonly jwtService: JwtService,
   ) {}
 
   async register(registerDto: RegisterDto) {
-    const { email, password, name, timezone } = registerDto;
+    const { email, password, name } = registerDto;
 
     try {
-      const existingUser = await this.userRepository.findOne({
-        where: { email },
-      });
+      const existingUser = await this.usersRepository.findByEmail(email);
 
       if (existingUser) {
         throw new ConflictException('Email already in use');
@@ -41,18 +37,18 @@ export class AuthService {
 
       const hashedPassword = await this.hashPassword(password);
 
-      const user = this.userRepository.create({
+      const user = this.usersRepository.create({
         email,
         passwordHash: hashedPassword,
         name,
-        timezone,
       });
 
-      await this.userRepository.save(user);
+      await this.usersRepository.save(user);
 
       return {
         id: user.id,
         email: user.email,
+        name: user.name,
         createdAt: user.createdAt,
       };
     } catch (error: any) {
@@ -96,12 +92,9 @@ export class AuthService {
     }
   }
 
-  async validateUser(email: string, password: string): Promise<User> {
+  async validateUser(email: string, password: string) {
     try {
-      const user = await this.userRepository.findOne({
-        where: { email },
-        select: { id: true, email: true, passwordHash: true },
-      });
+      const user = await this.usersRepository.findByEmail(email, true);
       if (!user) {
         throw new UnauthorizedException('Invalid credentials');
       }

@@ -13,15 +13,30 @@ async function bootstrap() {
     credentials: true,
   })
   const config = new DocumentBuilder()
-    .setTitle('Collaborative Routine API')
+    .setTitle('Team Rituals & Health API')
     .setDescription(
-      'API documentation for authentication and collaboration features',
+      'Multi-tenant platform for managing workspaces, rituals, and team sentiment.',
     )
     .setVersion('1.0')
     .addTag('auth', 'Authentication endpoints')
-    .addTag('groups', 'Group management endpoints')
-    .addTag('routines', 'Routine templates and group routines')
-    .addBearerAuth()
+    .addTag('users', 'User profile endpoints')
+    .addTag('workspaces', 'Workspace lifecycle and membership')
+    .addTag('teams', 'Team management workflows')
+    .addTag('rituals', 'Team ritual configuration and status')
+    .addTag('sessions', 'Scheduled ritual session lifecycle')
+    .addTag('responses', 'Member ritual submissions')
+    .addTag('sentiment', 'Weekly team sentiment tracking')
+    .addTag('dashboard', 'Workspace-level health metrics')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+      },
+      'bearer', 
+    )
+    .addSecurityRequirements('bearer')
+
     .build();
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   app.useGlobalFilters(new AllExceptionsFilter());

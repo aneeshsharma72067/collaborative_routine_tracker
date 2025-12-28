@@ -1,19 +1,26 @@
-import { Controller, Get, Patch, Body } from '@nestjs/common';
+import { Body, Controller, Get, Logger, Patch, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { type RequestUser } from '../common/types';
 
 @Controller('users')
+@ApiTags('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get('me')
-  getMe(@CurrentUser() user: any) {
-    return this.usersService.findById(user?.sub || user?.id);
+  @UseGuards(JwtAuthGuard)
+  getMe(@CurrentUser() user: RequestUser) {
+    Logger.log(`Fetching profile for user ID: ${user.sub}`);
+    return this.usersService.findById(user.sub);
   }
 
   @Patch('me')
-  updateMe(@CurrentUser() user: any, @Body() dto: UpdateUserDto) {
-    return this.usersService.update(user?.sub || user?.id, dto);
+  @UseGuards(JwtAuthGuard)
+  updateMe(@CurrentUser() user: RequestUser, @Body() dto: UpdateUserDto) {
+    return this.usersService.update(user.sub, dto);
   }
 }

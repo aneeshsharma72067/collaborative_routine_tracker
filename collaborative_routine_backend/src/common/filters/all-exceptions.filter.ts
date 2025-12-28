@@ -87,6 +87,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
       (exception as any)?.name === 'JsonWebTokenError' ||
       (exception as any)?.name === 'TokenExpiredError'
     ) {
+      console.log('[AllExceptionsFilter] JWT error:', {
+        name: (exception as any).name,
+        message: (exception as any).message,
+      });
       mappedException = new UnauthorizedException(
         (exception as any).message ?? 'Invalid token',
       );

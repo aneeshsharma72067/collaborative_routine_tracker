@@ -1,21 +1,26 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { User } from './entities/user.entity';
+import { UsersRepository } from './users.repository';
 
 @Injectable()
 export class UsersService {
-  constructor(
-    @InjectRepository(User)
-    private readonly repo: Repository<User>,
-  ) {}
+  constructor(private readonly users: UsersRepository) {}
 
-  findById(id: number | string) {
-    return this.repo.findOne({ where: { id } as any });
+  async findById(id: string) {
+    const user = await this.users.findById(id);
+    Logger.log(`Fetching profile for user ID in service: ${id}`);
+    
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
   }
 
-  update(id: number | string, dto: UpdateUserDto) {
-    return this.repo.update({ id } as any, dto as any);
+  async update(id: string, dto: UpdateUserDto) {
+    const user = await this.users.updateProfile(id, dto);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
   }
 }
