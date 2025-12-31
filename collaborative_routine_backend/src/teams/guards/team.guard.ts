@@ -9,6 +9,7 @@ import { Reflector } from '@nestjs/core';
 import { TeamsRepository } from '../teams.repository';
 import { TeamMembersRepository } from '../team-members.repository';
 import { TEAM_ROLES_KEY } from '../decorators/team-roles.decorator';
+import { TEAM_ALLOW_GUESTS_KEY } from '../decorators/team-access.decorator';
 import { TeamRole } from '../../common/enums/team-role.enum';
 import { RequestUser } from '../../common/types';
 
@@ -49,21 +50,32 @@ export class TeamGuard implements CanActivate {
       user.sub,
     );
 
-    if (!membership) {
-      throw new ForbiddenException('Team membership required');
-    }
-
     const requiredRoles = this.reflector.getAllAndOverride<TeamRole[]>(
       TEAM_ROLES_KEY,
       [context.getHandler(), context.getClass()],
     );
 
-    if (requiredRoles?.length && !requiredRoles.includes(membership.role)) {
-      throw new ForbiddenException('Insufficient team role');
+    const allowGuests = this.reflector.getAllAndOverride<boolean>(
+      TEAM_ALLOW_GUESTS_KEY,
+      [context.getHandler(), context.getClass()],
+    );
+
+    const isWorkspaceOwner = Boolean(request.isWorkspaceOwner);
+    const needsMembership =
+      (!allowGuests && !isWorkspaceOwner) || (requiredRoles?.length ?? 0) > 0;
+
+    if (!membership && needsMembership) {
+      throw new ForbiddenException('Team membership required');
+    }
+
+    if (requiredRoles?.length && !isWorkspaceOwner) {
+      if (!membership || !requiredRoles.includes(membership.role)) {
+        throw new ForbiddenException('Insufficient team role');
+      }
     }
 
     request.team = team;
-    request.teamMembership = membership;
+    request.teamMembership = membership ?? null;
     return true;
   }
 }

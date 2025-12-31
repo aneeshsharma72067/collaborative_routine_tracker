@@ -17,7 +17,7 @@ import { useAuth } from '@/hooks/useAuth';
 export default function TeamDetailPage() {
   const { teamId } = useParams<{ teamId: string }>();
   const router = useRouter();
-  const { activeWorkspaceId } = useWorkspace();
+  const { activeWorkspaceId, activeWorkspace } = useWorkspace();
   const { user } = useAuth();
 
   const teams = useTeamStore((state) => state.teams);
@@ -72,6 +72,44 @@ export default function TeamDetailPage() {
   const [newRitualType, setNewRitualType] = useState<RitualType>('STANDUP');
   const [newRitualFrequency, setNewRitualFrequency] = useState<RitualFrequency>('WEEKLY');
   const [createError, setCreateError] = useState<string | null>(null);
+
+  const membershipByUserId = useMemo(() => {
+    const map = new Map<string, boolean>();
+    members.forEach((member) => map.set(member.userId, true));
+    return map;
+  }, [members]);
+
+  const availableWorkspaceMembers = useMemo(() => {
+    return workspaceMembers.filter(
+      (workspaceMember) => !membershipByUserId.get(workspaceMember.userId),
+    );
+  }, [workspaceMembers, membershipByUserId]);
+
+  const currentTeamMembership = useMemo(() => {
+    if (!user?.id) {
+      return null;
+    }
+    return members.find((member) => member.userId === user.id) ?? null;
+  }, [members, user?.id]);
+
+  const isTeamMember = Boolean(currentTeamMembership);
+  const isWorkspaceOwner = Boolean(
+    activeWorkspace?.ownerId && user?.id && activeWorkspace.ownerId === user.id,
+  );
+  const canManageMembers = isWorkspaceOwner;
+  const canManageRituals = isWorkspaceOwner;
+  const readOnlyReasons: string[] = [];
+  if (!isWorkspaceOwner) {
+    readOnlyReasons.push(
+      'Only the workspace owner can change members, rituals, or sessions.',
+    );
+  }
+  if (!isTeamMember) {
+    readOnlyReasons.push(
+      'You are not listed on this team yet, so you have view-only access.',
+    );
+  }
+  const readOnlyMessage = readOnlyReasons.join(' ');
 
   useEffect(() => {
     if (!activeWorkspaceId) return;
@@ -131,32 +169,15 @@ export default function TeamDetailPage() {
     .sort((a, b) => sessionTimestamp(a).localeCompare(sessionTimestamp(b)))
     .slice(0, 5);
 
-  const membershipByUserId = useMemo(() => {
-    const map = new Map<string, boolean>();
-    members.forEach((member) => map.set(member.userId, true));
-    return map;
-  }, [members]);
-
-  const availableWorkspaceMembers = useMemo(() => {
-    return workspaceMembers.filter(
-      (workspaceMember) => !membershipByUserId.get(workspaceMember.userId),
-    );
-  }, [workspaceMembers, membershipByUserId]);
-
-  const currentTeamMembership = useMemo(() => {
-    if (!user?.id) {
-      return null;
-    }
-    return members.find((member) => member.userId === user.id) ?? null;
-  }, [members, user?.id]);
-
-  const isTeamLead = currentTeamMembership?.role === 'LEAD';
-  const canManageMembers = isTeamLead;
 
   const handleCreateRitual = async (event: React.FormEvent) => {
     event.preventDefault();
 
     if (!activeWorkspaceId) return;
+    if (!isWorkspaceOwner) {
+      setCreateError('Only the workspace owner can create rituals');
+      return;
+    }
     if (!newRitualName.trim()) {
       setCreateError('Ritual name is required');
       return;
@@ -180,6 +201,10 @@ export default function TeamDetailPage() {
   const handleAddMember = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!activeWorkspaceId) return;
+    if (!isWorkspaceOwner) {
+      setMemberFormError('Only the workspace owner can add members');
+      return;
+    }
     if (!selectedMemberId) {
       setMemberFormError('Select a workspace member to add');
       return;
@@ -201,7 +226,9 @@ export default function TeamDetailPage() {
     ritualId: string,
     currentStatus: RitualStatus,
   ) => {
-    if (!activeWorkspaceId) return;
+    if (!activeWorkspaceId || !isWorkspaceOwner) {
+      return;
+    }
     const nextStatus: RitualStatus = currentStatus === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
     await updateRitualStatus(activeWorkspaceId, teamId, ritualId, nextStatus);
   };
@@ -231,6 +258,12 @@ export default function TeamDetailPage() {
         </div>
       </header>
 
+      {readOnlyMessage && (
+        <div className='rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-200'>
+          {readOnlyMessage}
+        </div>
+      )}
+
       <section className='rounded-3xl border border-slate-800/70 bg-slate-900/60 p-6 backdrop-blur-xl'>
         <div className='flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between'>
           <div>
@@ -251,7 +284,7 @@ export default function TeamDetailPage() {
         <div className='mt-6 space-y-3'>
           {members.length === 0 && (
             <div className='rounded-2xl border border-slate-800/60 bg-slate-900/70 p-5 text-sm text-slate-400'>
-              No members yet. Leads can add workspace members to this team.
+              No members yet. Workspace owners can add members to this team.
             </div>
           )}
           {members.map((member) => (
@@ -279,10 +312,10 @@ export default function TeamDetailPage() {
           <div className='flex items-center justify-between'>
             <div>
               <p className='text-sm font-semibold text-white'>Add team member</p>
-              <p className='text-xs text-slate-400'>Only team leads can add workspace users to this team.</p>
+              <p className='text-xs text-slate-400'>Only the workspace owner can add workspace users to this team.</p>
             </div>
             <span className='text-[10px] font-semibold uppercase tracking-[0.35em] text-slate-400'>
-              {canManageMembers ? 'Lead access' : 'View only'}
+              {canManageMembers ? 'Owner access' : 'View only'}
             </span>
           </div>
 
@@ -337,7 +370,7 @@ export default function TeamDetailPage() {
               <p className='text-[10px] text-slate-500'>Workspace admins can adjust member roles later from the dashboard.</p>
             </form>
           ) : (
-            <p className='mt-4 text-sm text-slate-400'>Only team leads can add or update team members. Contact a lead for access changes.</p>
+            <p className='mt-4 text-sm text-slate-400'>Only the workspace owner can add or update team members.</p>
           )}
         </div>
       </section>
@@ -349,17 +382,21 @@ export default function TeamDetailPage() {
               <h2 className='text-lg font-semibold text-white'>Rituals</h2>
               <p className='text-xs text-slate-400'>Recurring ceremonies this team participates in.</p>
             </div>
-            <button
-              type='button'
-              onClick={() => setIsCreateOpen(true)}
-              className='rounded-xl border border-blue-500/60 bg-blue-500/20 px-4 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-blue-100 transition hover:bg-blue-500/30'
-            >
-              Create ritual
-            </button>
+            {canManageRituals ? (
+              <button
+                type='button'
+                onClick={() => setIsCreateOpen(true)}
+                className='rounded-xl border border-blue-500/60 bg-blue-500/20 px-4 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-blue-100 transition hover:bg-blue-500/30'
+              >
+                Create ritual
+              </button>
+            ) : (
+              <span className='text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-500'>Owner access required</span>
+            )}
           </div>
 
           <div className='mt-6 space-y-4'>
-            {isCreateOpen && (
+            {isCreateOpen && canManageRituals && (
               <div className='rounded-2xl border border-slate-800/60 bg-slate-900/70 p-5'>
                 <form onSubmit={handleCreateRitual} className='space-y-4 text-sm'>
                   <div>
@@ -456,7 +493,7 @@ export default function TeamDetailPage() {
 
             {!isRitualsLoading && !ritualError && rituals.length === 0 && (
               <div className='rounded-2xl border border-slate-800/60 bg-slate-900/70 p-6 text-sm text-slate-400'>
-                No rituals yet. Create a ritual to get this team into a sustainable rhythm.
+                No rituals yet. Workspace owners can create rituals to kick off this team.
               </div>
             )}
 
@@ -477,6 +514,14 @@ export default function TeamDetailPage() {
                   )[0];
                 const isPaused = ritual.status === 'PAUSED';
                 const isUpdating = !!ritualUpdateState[ritual.id];
+                const ritualActionLabel = isUpdating
+                  ? 'Updating...'
+                  : isPaused
+                    ? 'Resume ritual'
+                    : 'Pause ritual';
+                const ritualActionTitle = !canManageRituals
+                  ? 'Only the workspace owner can change ritual state'
+                  : undefined;
 
                 return (
                 <article
@@ -505,15 +550,12 @@ export default function TeamDetailPage() {
                       </span>
                       <button
                         type='button'
-                        disabled={!isTeamLead || isUpdating}
+                        disabled={!canManageRituals || isUpdating}
+                        title={ritualActionTitle}
                         onClick={() => handleRitualStatusToggle(ritual.id, ritual.status)}
                         className='text-[10px] font-semibold uppercase tracking-[0.25em] text-blue-200 underline-offset-4 hover:underline disabled:cursor-not-allowed disabled:opacity-50'
                       >
-                        {isUpdating
-                          ? 'Updating...'
-                          : isPaused
-                            ? 'Resume ritual'
-                            : 'Pause ritual'}
+                        {ritualActionLabel}
                       </button>
                     </div>
                   </div>

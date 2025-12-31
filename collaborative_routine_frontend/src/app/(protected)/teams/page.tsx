@@ -6,7 +6,7 @@ import { Layers3, Loader, Loader2, Search, Users } from 'lucide-react';
 import { useTeams } from '@/hooks/useTeams';
 
 export default function TeamsPage() {
-  const { teams, isLoading, error, refetch, createTeam } = useTeams();
+  const { teams, isLoading, error, refetch, createTeam, isWorkspaceOwner } = useTeams();
   const [query, setQuery] = useState('');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [newTeamName, setNewTeamName] = useState('');
@@ -47,17 +47,21 @@ export default function TeamsPage() {
           <h1 className='mt-2 text-3xl font-semibold text-white'>Your teams</h1>
           <p className='mt-2 text-sm text-slate-300'>Create rituals, assign facilitators, and keep visibility across every team.</p>
         </div>
-        <button
-          type='button'
-          onClick={() => setIsCreateOpen(true)}
-          className='mt-4 inline-flex items-center gap-2 rounded-xl border border-blue-500/40 bg-blue-500/20 px-5 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-blue-100 shadow-[0_20px_40px_-30px_rgba(14,165,233,0.8)] transition hover:bg-blue-500/30 md:mt-0'
-        >
-          <Layers3 className='h-4 w-4' />
-          New team
-        </button>
+        {isWorkspaceOwner ? (
+          <button
+            type='button'
+            onClick={() => setIsCreateOpen(true)}
+            className='mt-4 inline-flex items-center gap-2 rounded-xl border border-blue-500/40 bg-blue-500/20 px-5 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-blue-100 shadow-[0_20px_40px_-30px_rgba(14,165,233,0.8)] transition hover:bg-blue-500/30 md:mt-0'
+          >
+            <Layers3 className='h-4 w-4' />
+            New team
+          </button>
+        ) : (
+          <span className='mt-4 rounded-full border border-slate-700/70 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.35em] text-slate-500 md:mt-0'>Owner only</span>
+        )}
       </header>
 
-      {isCreateOpen && (
+      {isWorkspaceOwner && isCreateOpen && (
         <section className='rounded-3xl border border-slate-800/70 bg-slate-900/60 p-6 backdrop-blur-xl'>
           <form onSubmit={handleCreateTeam} className='space-y-4'>
             <div>

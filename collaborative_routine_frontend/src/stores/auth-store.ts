@@ -18,33 +18,69 @@ interface AuthState {
   setToken: (token: string | null) => void;
 }
 
-type ErrorResponse = {
-  message?: string | string[];
-  error?: string;
-};
+function pickFirstMessage(source: unknown): string | null {
+  if (typeof source === "string") {
+    const trimmed = source.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  }
+
+  if (Array.isArray(source)) {
+    for (const entry of source) {
+      const resolved = pickFirstMessage(entry);
+      if (resolved) {
+        return resolved;
+      }
+    }
+    return null;
+  }
+
+  if (source && typeof source === "object") {
+    const record = source as Record<string, unknown>;
+    const prioritizedKeys = ["message", "error", "detail", "description", "title", "errors"];
+
+    for (const key of prioritizedKeys) {
+      if (key in record) {
+        const resolved = pickFirstMessage(record[key]);
+        if (resolved) {
+          return resolved;
+        }
+      }
+    }
+
+    for (const value of Object.values(record)) {
+      const resolved = pickFirstMessage(value);
+      if (resolved) {
+        return resolved;
+      }
+    }
+  }
+
+  return null;
+}
 
 function transformApiError(error: unknown): Error {
   if (isAxiosError(error)) {
     const fallback = "Request failed. Please try again.";
-    const payload = error.response?.data as ErrorResponse | undefined;
+    const payload = error.response?.data as unknown;
+    const resolvedMessage = pickFirstMessage(payload);
 
-    if (!payload) {
-      return new Error(error.message || fallback);
+    if (resolvedMessage) {
+      return new Error(resolvedMessage);
     }
 
-    if (Array.isArray(payload.message) && payload.message.length > 0) {
-      return new Error(payload.message[0]);
+    const statusText = error.response?.statusText;
+    const statusCode = error.response?.status;
+    if (statusText || statusCode) {
+      const readableStatus = [statusText, statusCode]
+        .filter((part) => Boolean(part))
+        .join(" ")
+        .trim();
+      if (readableStatus.length > 0) {
+        return new Error(readableStatus);
+      }
     }
 
-    if (typeof payload.message === "string" && payload.message.trim().length > 0) {
-      return new Error(payload.message);
-    }
-
-    if (payload.error && payload.error.trim().length > 0) {
-      return new Error(payload.error);
-    }
-
-    return new Error(fallback);
+    return new Error(error.message || fallback);
   }
 
   if (error instanceof Error) {
@@ -137,14 +173,22 @@ export const useAuthStore = create<AuthState>()(
   )
 );
 
-useAuthStore.persist.onHydrate(() => {
-  useAuthStore.setState({ hasHydrated: false });
-});
+const persistApi = useAuthStore.persist;
 
-useAuthStore.persist.onFinishHydration(() => {
+if (persistApi?.onHydrate) {
+  persistApi.onHydrate(() => {
+    useAuthStore.setState({ hasHydrated: false });
+  });
+} else {
   useAuthStore.setState({ hasHydrated: true });
-});
+}
+
+if (persistApi?.onFinishHydration) {
+  persistApi.onFinishHydration(() => {
+    useAuthStore.setState({ hasHydrated: true });
+  });
+}
 
 if (typeof window !== "undefined") {
-  useAuthStore.persist.rehydrate();
+  persistApi?.rehydrate?.();
 }

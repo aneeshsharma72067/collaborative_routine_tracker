@@ -15,18 +15,17 @@ import { TeamGuard } from '../teams/guards/team.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { type RequestUser } from '../common/types';
 import { CreateRitualDto } from './dto/create-ritual.dto';
-import { TeamRoles } from '../teams/decorators/team-roles.decorator';
-import { TeamRole } from '../common/enums/team-role.enum';
+import { AllowTeamGuests } from '../teams/decorators/team-access.decorator';
 import { UpdateRitualStatusDto } from './dto/update-ritual-status.dto';
+import { WorkspaceOwnerGuard } from '../workspaces/guards/workspace-owner.guard';
 
 @Controller('workspaces/:workspaceId/teams/:teamId/rituals')
 @ApiTags('rituals')
-@UseGuards(JwtAuthGuard, WorkspaceGuard, TeamGuard)
 export class RitualsController {
   constructor(private readonly ritualsService: RitualsService) {}
 
   @Post()
-  @TeamRoles(TeamRole.LEAD)
+  @UseGuards(JwtAuthGuard, WorkspaceGuard, WorkspaceOwnerGuard, TeamGuard)
   createRitual(
     @Param('workspaceId') workspaceId: string,
     @Param('teamId') teamId: string,
@@ -37,6 +36,8 @@ export class RitualsController {
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard, WorkspaceGuard, TeamGuard)
+  @AllowTeamGuests()
   listRituals(
     @Param('workspaceId') workspaceId: string,
     @Param('teamId') teamId: string,
@@ -45,7 +46,7 @@ export class RitualsController {
   }
 
   @Patch(':ritualId/status')
-  @TeamRoles(TeamRole.LEAD)
+  @UseGuards(JwtAuthGuard, WorkspaceGuard, WorkspaceOwnerGuard, TeamGuard)
   updateStatus(
     @Param('workspaceId') workspaceId: string,
     @Param('teamId') teamId: string,

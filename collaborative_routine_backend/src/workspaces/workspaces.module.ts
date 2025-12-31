@@ -8,6 +8,7 @@ import { WorkspacesRepository } from './workspaces.repository';
 import { WorkspaceMembersRepository } from './workspace-members.repository';
 import { UsersModule } from '../users/users.module';
 import { WorkspaceGuard } from './guards/workspace.guard';
+import { WorkspaceOwnerGuard } from './guards/workspace-owner.guard';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Workspace, WorkspaceMember]), UsersModule],
@@ -17,12 +18,14 @@ import { WorkspaceGuard } from './guards/workspace.guard';
     WorkspacesRepository,
     WorkspaceMembersRepository,
     WorkspaceGuard,
+    WorkspaceOwnerGuard,
   ],
   exports: [
     WorkspacesService,
     WorkspacesRepository,
     WorkspaceMembersRepository,
     WorkspaceGuard,
+    WorkspaceOwnerGuard,
   ],
 })
 export class WorkspacesModule {}

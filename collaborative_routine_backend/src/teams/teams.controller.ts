@@ -10,15 +10,13 @@ import { ApiTags } from '@nestjs/swagger';
 import { TeamsService } from './teams.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { WorkspaceGuard } from '../workspaces/guards/workspace.guard';
-import { WorkspaceRoles } from '../workspaces/decorators/workspace-roles.decorator';
-import { WorkspaceRole } from '../common/enums/workspace-role.enum';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { type RequestUser } from '../common/types';
 import { CreateTeamDto } from './dto/create-team.dto';
 import { TeamGuard } from './guards/team.guard';
 import { AddTeamMemberDto } from './dto/add-team-member.dto';
-import { TeamRoles } from './decorators/team-roles.decorator';
-import { TeamRole } from '../common/enums/team-role.enum';
+import { AllowTeamGuests } from './decorators/team-access.decorator';
+import { WorkspaceOwnerGuard } from '../workspaces/guards/workspace-owner.guard';
 
 @Controller('workspaces/:workspaceId/teams')
 @ApiTags('teams')
@@ -27,8 +25,7 @@ export class TeamsController {
   constructor(private readonly teamsService: TeamsService) {}
 
   @Post()
-  @WorkspaceRoles(WorkspaceRole.ADMIN)
-  @UseGuards(WorkspaceGuard)
+  @UseGuards(WorkspaceGuard, WorkspaceOwnerGuard)
   createTeam(
     @Param('workspaceId') workspaceId: string,
     @CurrentUser() user: RequestUser,
@@ -44,6 +41,7 @@ export class TeamsController {
   }
 
   @Get(':teamId')
+  @AllowTeamGuests()
   @UseGuards(WorkspaceGuard, TeamGuard)
   getTeam(
     @Param('workspaceId') workspaceId: string,
@@ -53,14 +51,14 @@ export class TeamsController {
   }
 
   @Get(':teamId/members')
+  @AllowTeamGuests()
   @UseGuards(WorkspaceGuard, TeamGuard)
   listMembers(@Param('teamId') teamId: string) {
     return this.teamsService.listMembers(teamId);
   }
 
   @Post(':teamId/members')
-  @TeamRoles(TeamRole.LEAD)
-  @UseGuards(WorkspaceGuard, TeamGuard)
+  @UseGuards(WorkspaceGuard, WorkspaceOwnerGuard, TeamGuard)
   addMember(
     @Param('workspaceId') workspaceId: string,
     @Param('teamId') teamId: string,

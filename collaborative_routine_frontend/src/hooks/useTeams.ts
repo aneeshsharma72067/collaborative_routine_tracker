@@ -6,7 +6,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { useAuth } from "@/hooks/useAuth";
 
 export function useTeams() {
-  const { activeWorkspaceId } = useWorkspace();
+  const { activeWorkspaceId, activeWorkspace } = useWorkspace();
   const { user } = useAuth();
   const teams = useTeamStore((state) => state.teams);
   const isLoading = useTeamStore((state) => state.isLoading);
@@ -24,13 +24,19 @@ export function useTeams() {
     }
   }, [activeWorkspaceId, hasLoadedOnce, isLoading, fetchTeams]);
 
+  const isWorkspaceOwner = Boolean(
+    activeWorkspace?.ownerId && activeWorkspace.ownerId === user?.id,
+  );
+
   const refetch = async () => {
     if (!activeWorkspaceId) return;
     await fetchTeams(activeWorkspaceId);
   };
 
   const createTeam = async (name: string) => {
-    if (!activeWorkspaceId || !user?.id) return null;
+    if (!activeWorkspaceId || !user?.id || !isWorkspaceOwner) {
+      return null;
+    }
     const trimmedName = name.trim();
     if (!trimmedName) return null;
 
@@ -46,5 +52,6 @@ export function useTeams() {
     error,
     refetch,
     createTeam,
+    isWorkspaceOwner,
   };
 }

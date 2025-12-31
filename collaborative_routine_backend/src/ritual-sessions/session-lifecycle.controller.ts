@@ -4,17 +4,20 @@ import { RitualSessionsService } from './ritual-sessions.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { WorkspaceGuard } from '../workspaces/guards/workspace.guard';
 import { TeamGuard } from '../teams/guards/team.guard';
-import { TeamRoles } from '../teams/decorators/team-roles.decorator';
-import { TeamRole } from '../common/enums/team-role.enum';
+import { WorkspaceOwnerGuard } from '../workspaces/guards/workspace-owner.guard';
 
 @Controller('workspaces/:workspaceId/teams/:teamId')
 @ApiTags('sessions')
-@UseGuards(JwtAuthGuard, WorkspaceGuard, TeamGuard)
 export class SessionLifecycleController {
   constructor(private readonly ritualSessionsService: RitualSessionsService) {}
 
   @Patch('sessions/:sessionId/close')
-  @TeamRoles(TeamRole.LEAD)
+  @UseGuards(
+    JwtAuthGuard,
+    WorkspaceGuard,
+    WorkspaceOwnerGuard,
+    TeamGuard,
+  )
   closeSession(
     @Param('workspaceId') workspaceId: string,
     @Param('teamId') teamId: string,

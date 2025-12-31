@@ -7,6 +7,7 @@ import { TeamGuard } from '../teams/guards/team.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { type RequestUser } from '../common/types';
 import { SubmitRitualResponseDto } from './dto/submit-ritual-response.dto';
+import { AllowTeamGuests } from '../teams/decorators/team-access.decorator';
 
 @Controller(
   'workspaces/:workspaceId/teams/:teamId/rituals/:ritualId/sessions/:sessionId/responses',
@@ -36,6 +37,7 @@ export class RitualResponsesController {
   }
 
   @Get()
+  @AllowTeamGuests()
   listResponses(
     @Param('workspaceId') workspaceId: string,
     @Param('teamId') teamId: string,
